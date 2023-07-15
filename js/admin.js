@@ -88,24 +88,6 @@ let bar = (data) => {
   const chart = new Chart(ctx, config);
 };
 
-let load = (data) => {
-  if (meteo == null) {
-    let URL =
-      "https://api.open-meteo.com/v1/forecast?latitude=-2.15&longitude=-79.97&hourly=temperature_2m&daily=uv_index_max&timezone=auto";
-
-    fetch(URL)
-      .then((response) => response.json())
-      .then((data) => {
-        load(data);
-
-        /* GUARDAR DATA EN MEMORIA */
-      })
-      .catch(console.error);
-  } else {
-    /* CARGAR DATA EN MEMORIA */
-  }
-};
-
 let loadInocar = () => {
   let URL =
     "https://cors-anywhere.herokuapp.com/https://www.inocar.mil.ec/mareas/consultan.php";
@@ -115,26 +97,35 @@ let loadInocar = () => {
     .then((data) => {
       const parser = new DOMParser();
       const xml = parser.parseFromString(data, "application/xml");
-      console.log(xml);
+      document.getElementById("mareas").innerHTML = data;
     })
     .catch((error) => console.log(error));
 };
 
-(function () {
-  let meteo = localStorage.getItem("meteo");
-
+const loadOpenMeteoData = async () => {
   let URL =
     "https://api.open-meteo.com/v1/forecast?latitude=-2.15&longitude=-79.97&hourly=temperature_2m&daily=uv_index_max&timezone=auto";
 
-  fetch(URL)
-    .then((response) => response.json())
-    .then((data) => {
-      console.log(data);
-      document.getElementById("lat").textContent = data["latitude"];
-      document.getElementById("long").textContent = data.longitude;
-      plot(data);
-      bar(data);
-      loadInocar();
-    })
-    .catch((error) => console.log(error));
+  let response = await fetch(URL).catch((error) => console.log(error));
+  return await response.json();   
+}
+
+(async function () {
+  let meteo = localStorage.getItem("meteo");
+
+  if(meteo == null) {
+    let data = await loadOpenMeteoData();
+    document.getElementById("lat").textContent = data["latitude"];
+    document.getElementById("long").textContent = data.longitude;
+    localStorage.setItem("meteo", data)
+    plot(data);
+    bar(data);
+  } else {
+    document.getElementById("lat").textContent = meteo["latitude"];
+    document.getElementById("long").textContent = meteo.longitude;
+    plot(meteo);
+    bar(meteo);
+  }
+
+  loadInocar();
 })();
