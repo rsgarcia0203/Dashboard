@@ -115,12 +115,15 @@ const loadOpenMeteoData = async () => {
 
   if(meteo == null) {
     let data = await loadOpenMeteoData();
+    console.log(data)
     document.getElementById("lat").textContent = data["latitude"];
     document.getElementById("long").textContent = data.longitude;
-    localStorage.setItem("meteo", data)
+    localStorage.setItem("meteo", JSON.stringify(data))
     plot(data);
     bar(data);
   } else {
+    meteo = JSON.parse(meteo);
+    console.log(meteo)
     document.getElementById("lat").textContent = meteo["latitude"];
     document.getElementById("long").textContent = meteo.longitude;
     plot(meteo);
